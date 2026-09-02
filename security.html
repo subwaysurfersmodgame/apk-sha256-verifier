@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Vulnerability-reporting instructions and security boundaries for APK SHA-256 Verifier.">
+  <meta name="theme-color" content="#081425">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Security — APK SHA-256 Verifier</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="./"><span class="brand-mark">#</span><span>APK SHA-256 Verifier</span></a></header>
+  <main class="legal-main">
+    <article class="legal-card">
+      <p class="eyebrow dark">Repository policy</p>
+      <h1>Security</h1>
+      <h2>How should a vulnerability be reported?</h2>
+      <p>Send vulnerability details to contact@subwaysurfersmodgame.com before opening a public issue when disclosure would expose visitors to harm.</p>
+      <ul>
+        <li>Name the affected file and function.</li>
+        <li>Record the browser and operating system.</li>
+        <li>Provide exact reproduction steps.</li>
+        <li>Describe the observed and expected results.</li>
+        <li>Use a minimal proof of concept containing no private APK or personal data.</li>
+      </ul>
+      <h2>What are the calculator’s security boundaries?</h2>
+      <p>The calculator reads a local file and returns a SHA-256 digest. The calculator does not parse, install, execute, upload, or classify the selected file. A checksum match confirms byte equality against a reference checksum; it does not establish file safety.</p>
+    </article>
+  </main>
+  <footer><span>APK SHA-256 Verifier</span><nav><a href="./">Calculator</a><a href="privacy.html">Privacy</a><a href="license.html">License</a></nav></footer>
+</body>
+</html>

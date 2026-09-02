@@ -1,0 +1,14 @@
+{
+  "name": "apk-sha256-verifier",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Client-side SHA-256 calculator for APK and other local files.",
+  "scripts": {
+    "test": "node --test tests/sha256.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

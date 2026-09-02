@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Calculate the SHA-256 checksum of an APK locally in your browser. The file stays on the device and is read in 4 MB chunks.">
+  <meta name="theme-color" content="#081425">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-rCrC8FyjR8KGONF2Vua+U1kcrNWynRA7OTz0g4gSGbI='; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <script type="application/ld+json">
+[ 
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://subwaysurfersmodgame.com/#organization",
+      "name": "Subway Surfers Mod Game",
+      "url": "https://subwaysurfersmodgame.com/"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "APK SHA-256 Verifier",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any operating system with a supported web browser",
+      "browserRequirements": "Requires JavaScript modules and the File API.",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "publisher": { "@id": "https://subwaysurfersmodgame.com/#organization" },
+      "description": "A browser-based SHA-256 calculator that reads a selected APK or other file locally in 4 MB chunks."
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does the calculator upload the APK?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. The page contains no upload request or network connection for file data. JavaScript reads the selected file inside the browser tab." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does the calculator modify the selected file?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Browser file access is read-only in this workflow. The calculator reads bytes and returns a hexadecimal digest." }
+        },
+        {
+          "@type": "Question",
+          "name": "Can the calculator process a file that is not an APK?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. SHA-256 accepts any byte sequence. The file picker emphasizes APK files because the interface is designed for APK checksum comparison." }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does the calculated value differ from a published checksum?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Different SHA-256 values mean the byte sequences differ. A renamed file retains the same checksum, but one changed byte produces a different digest." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is an APK file checksum the same as a signer-certificate fingerprint?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. The APK file checksum digests every byte in the complete APK. A signer-certificate fingerprint digests the certificate data associated with the APK signature. The two SHA-256 values answer different questions and should not match." }
+        }
+      ]
+    }
+]
+  </script>
+  <title>APK SHA-256 Verifier — Calculate a File Checksum Locally</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="APK SHA-256 Verifier home">
+      <span class="brand-mark">#</span>
+      <span>APK SHA-256 Verifier</span>
+    </a>
+    <span class="header-status">Client-side utility</span>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Local file processing · No upload</p>
+      <h1 id="page-title">Calculate an APK’s SHA-256 checksum</h1>
+      <p class="lede"><strong>APK SHA-256 Verifier</strong> calculates the 64-character SHA-256 checksum for a file selected in the browser. The calculator reads the file on the device in 4 MB chunks and sends no file data to a server.</p>
+
+      <div class="tool-card" aria-label="APK SHA-256 calculator">
+        <div id="drop-zone" class="drop-zone">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 4h14l8 8v10h-4v-8h-6V8H14v32h18v-8h4v12H10V4h4Zm10 16 10 10-3 3-5-5v12h-4V28l-5 5-3-3 10-10Z"/></svg>
+          <p><strong>Select an APK or drop a file here</strong></p>
+          <p class="drop-note">The file stays in this browser tab.</p>
+          <input id="apk-file" type="file" accept=".apk,application/vnd.android.package-archive" hidden>
+          <button id="choose-file" class="button button-secondary" type="button">Choose file</button>
+        </div>
+
+        <div class="file-row">
+          <span id="file-summary">No file selected</span>
+          <div class="actions">
+            <button id="calculate" class="button button-primary" type="button" disabled>Calculate SHA-256</button>
+            <button id="cancel" class="button button-text" type="button" hidden>Cancel</button>
+          </div>
+        </div>
+
+        <div class="expected-field">
+          <label for="expected-hash">Expected SHA-256 <span>(optional)</span></label>
+          <input id="expected-hash" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Paste a 64-character SHA-256 value" aria-describedby="expected-note">
+          <p id="expected-note">Spaces and colon separators are removed before comparison.</p>
+        </div>
+
+        <div id="progress-wrap" class="progress-wrap" hidden>
+          <div class="progress-label"><span>Calculation progress</span><span id="progress-text">0%</span></div>
+          <progress id="progress-bar" max="100" value="0">0%</progress>
+        </div>
+
+        <p id="status" class="status" aria-live="polite"></p>
+
+        <div id="result" class="result" hidden>
+          <div class="result-heading">
+            <span>SHA-256</span>
+            <button id="copy-hash" class="button button-small" type="button">Copy hash</button>
+          </div>
+          <code id="hash-output"></code>
+          <p id="comparison" class="comparison" hidden></p>
+        </div>
+      </div>
+
+      <ul class="trust-list" aria-label="Tool behavior">
+        <li>Processes files locally</li>
+        <li>Reads 4 MB at a time</li>
+        <li>Requires no account</li>
+      </ul>
+    </section>
+
+    <section class="content-grid" aria-label="SHA-256 explanation">
+      <article class="content-card">
+        <span class="step-number">01</span>
+        <h2>How does the APK SHA-256 Verifier work?</h2>
+        <p>The calculator reads the selected file in 4 MB chunks and updates one SHA-256 state after each chunk. The final 256-bit digest is displayed as 64 lowercase hexadecimal characters. Chunked reading prevents the page from loading the complete file into memory at once.</p>
+      </article>
+
+      <article class="content-card accent-card">
+        <span class="step-number">02</span>
+        <h2>What does a matching SHA-256 checksum establish?</h2>
+        <p>A matching SHA-256 value establishes that two files contain the same byte sequence. A checksum does not identify runtime behavior, inspect permissions, confirm a signer, or provide a safety conclusion.</p>
+      </article>
+
+      <article class="content-card full-width">
+        <span class="step-number">03</span>
+        <h2>What is a known SHA-256 example?</h2>
+        <p>The 3-byte ASCII text <code>abc</code> produces this published SHA-256 test value:</p>
+        <code class="example-hash">ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad</code>
+        <p>Create a plain-text file containing only <code>abc</code>, then select that file to reproduce the value.</p>
+      </article>
+    </section>
+
+    <section class="limits-section">
+      <div>
+        <p class="eyebrow dark">Scope</p>
+        <h2>What does this calculator not inspect?</h2>
+      </div>
+      <ul class="limits-list">
+        <li><strong>APK contents:</strong> the calculator does not parse the manifest, package name, permissions, resources, or signer certificate.</li>
+        <li><strong>Runtime behavior:</strong> the calculator does not install, open, execute, or emulate the selected file.</li>
+        <li><strong>Safety:</strong> the checksum identifies bytes; it does not classify those bytes as safe or harmful.</li>
+        <li><strong>Reference accuracy:</strong> a comparison only answers whether the calculated value equals the reference value entered elsewhere.</li>
+      </ul>
+    </section>
+
+    <section class="faq-section">
+      <p class="eyebrow">Direct answers</p>
+      <h2>APK SHA-256 questions</h2>
+      <details>
+        <summary>Does the calculator upload the APK?</summary>
+        <p>No. The page contains no upload request or network connection for file data. JavaScript reads the selected file inside the browser tab.</p>
+      </details>
+      <details>
+        <summary>Does the calculator modify the selected file?</summary>
+        <p>No. Browser file access is read-only in this workflow. The calculator reads bytes and returns a hexadecimal digest.</p>
+      </details>
+      <details>
+        <summary>Can the calculator process a file that is not an APK?</summary>
+        <p>Yes. SHA-256 accepts any byte sequence. The file picker emphasizes APK files because the interface is designed for APK checksum comparison.</p>
+      </details>
+      <details>
+        <summary>Why does the calculated value differ from a published checksum?</summary>
+        <p>Different SHA-256 values mean the byte sequences differ. A renamed file retains the same checksum, but one changed byte produces a different digest.</p>
+      </details>
+      <details>
+        <summary>Is an APK file checksum the same as a signer-certificate fingerprint?</summary>
+        <p>No. The APK file checksum digests every byte in the complete APK. A signer-certificate fingerprint digests the certificate data associated with the APK signature. The two SHA-256 values answer different questions and should not match.</p>
+      </details>
+    </section>
+
+    <aside class="reference-cta">
+      <div>
+        <p class="eyebrow dark">Continue the file check</p>
+        <h2>Read the APK checksum and permission guide</h2>
+        <p>Use the file-checking guide to place SHA-256 beside package identity, signer details, declared permissions, archive integrity, external scanning, and runtime testing.</p>
+      </div>
+      <a class="button button-dark" href="https://subwaysurfersmodgame.com/subway-surfers-mod-apk-safety/?utm_source=github&utm_medium=referral&utm_campaign=apk_sha256_verifier&utm_content=reference_cta">Open the file-checking guide</a>
+    </aside>
+  </main>
+
+  <footer>
+    <span>APK SHA-256 Verifier</span>
+    <nav aria-label="Repository documents">
+      <a href="privacy.html">Privacy</a>
+      <a href="security.html">Security</a>
+      <a href="license.html">License</a>
+    </nav>
+  </footer>
+
+  <script type="module" src="assets/app.js"></script>
+</body>
+</html>
